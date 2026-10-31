@@ -130,6 +130,27 @@ const matriculas: ProjectLayerConfig = {
   },
 };
 
+// Área de estudo com a simulação 3D de café keyline, como no Jurema. Estilo do Jurema
+// (3 px, preenchimento 0.18, zIndex 25) em laranja, para não confundir com o amarelo
+// das matrículas. O botão abre a simulação sobre o mapa depois de voar até a área
+// (flyTo padrão); a origem está liberada em embeddedPages.
+const simulationUrl = "https://cafe-keyline-3d.vercel.app/";
+const areaEstudo: ProjectLayerConfig = {
+  id: "area-estudo", name: "Área de Estudo", description: "Simulação 3D de café keyline", kind: "vector", defaultVisible: true, opacityControl: true,
+  source: {
+    format: "geojson", url: geojson("area_estudo.geojson"), autoZoom: false,
+    style: { stroke: "#FF6A00", strokeWidth: 3, fill: "#FF6A00", fillOpacity: 0.18, clampToGround: true, zIndex: 25 },
+    popup: {
+      titleProperty: "nome",
+      fields: [
+        { property: "area_ha", label: "Área", decimals: 2, suffix: " ha" },
+        { property: "perimetro_km", label: "Perímetro", decimals: 2, suffix: " km" },
+      ],
+      actions: [{ label: "Entrar na simulação 3D", url: simulationUrl }],
+    },
+  },
+};
+
 export const project: ProjectConfig = {
   ...templateProject,
   id: "ivan",
@@ -156,8 +177,11 @@ export const project: ProjectConfig = {
     drenagem,
     estradas,
     matriculas,
+    areaEstudo,
     modelo,
   ],
+  // Páginas que os popups podem abrir sobre o mapa (simulação 3D da área de estudo).
+  embeddedPages: { allowedOrigins: [new URL(simulationUrl).origin] },
   scenes: [],
   diagnostic: { steps: [] },
   // Ferramentas de desenvolvimento desligadas: Home, altura e recorte já definidos.
