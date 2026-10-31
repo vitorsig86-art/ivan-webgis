@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Cartesian2, Entity, type Viewer } from "cesium";
 import { findHomePopupEntity, homePopupPoint, readVectorPopup, resolveVectorPopupSelection, type VectorPopupActionLink } from "../cesium/vectorPopup";
+import { isMobileLayout } from "./mobileTabs";
 import { placePopup, type ScreenPoint } from "./popupPosition";
 import { Icon } from "./icons";
 import "./VectorPopup.css";
@@ -45,7 +46,7 @@ export function VectorPopup({ viewer, allowedOrigins = NO_ORIGINS, onOpenPage, h
     const openHomePopup = () => {
       const since = homePending.current;
       if (since === null || viewer.isDestroyed()) return;
-      const entity = findHomePopupEntity(viewer);
+      const entity = findHomePopupEntity(viewer, isMobileLayout());
       if (!entity || (!viewer.scene.globe.tilesLoaded && performance.now() - since < 5000)) return;
       homePending.current = null;
       clickRef.current = homePopupPoint(viewer, entity, viewer.clock.currentTime) ?? null;

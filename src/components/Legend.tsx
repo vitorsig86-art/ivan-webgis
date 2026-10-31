@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { LegendConfig } from "../projects/types";
+import { MOBILE_MEDIA_QUERY } from "./mobileTabs";
 import "./Legend.css";
 
 type LegendProps = LegendConfig & {
@@ -12,7 +13,7 @@ function LegendFrame({ title, image = false, children }: { title: string; image?
   const containerRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    const query = window.matchMedia("(max-width: 760px)");
+    const query = window.matchMedia(MOBILE_MEDIA_QUERY);
     function updateMobile() {
       setMobile(query.matches);
       if (!query.matches) setExpanded(false);

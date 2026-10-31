@@ -1,6 +1,11 @@
 import { BoundingSphere, Cartesian3, Cartographic, ColorMaterialProperty, JulianDate, SceneTransforms, type Entity, type PolygonHierarchy, type Viewer } from "cesium";
 import type { VectorPopupConfig } from "../projects/types";
 
+// popup.openOnHome for the current layout: true always, "desktop" only outside mobile.
+export function opensOnHome(popup: VectorPopupConfig | undefined, mobile: boolean): boolean {
+  return popup?.openOnHome === true || (popup?.openOnHome === "desktop" && !mobile);
+}
+
 export interface VectorPopupActionLink {
   label: string;
   url: string;
@@ -30,13 +35,13 @@ export function registerVectorPopup(entity: Entity, config: VectorPopupConfig): 
 // popup.openOnHome: the first visible feature of a layer configured to open its
 // popup at the opening view and after Home. Outline helpers (entities with a
 // parent) are skipped; the feature itself owns the popup. Public APIs only.
-export function findHomePopupEntity(viewer: Viewer): Entity | undefined {
+export function findHomePopupEntity(viewer: Viewer, mobile = false): Entity | undefined {
   if (viewer.isDestroyed()) return undefined;
   for (let index = 0; index < viewer.dataSources.length; index++) {
     const dataSource = viewer.dataSources.get(index);
     if (!dataSource.show) continue;
     for (const entity of dataSource.entities.values) {
-      if (!entity.parent && entity.isShowing && configurations.get(entity)?.openOnHome) return entity;
+      if (!entity.parent && entity.isShowing && opensOnHome(configurations.get(entity), mobile)) return entity;
     }
   }
   return undefined;

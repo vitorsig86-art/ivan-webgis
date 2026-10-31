@@ -1,5 +1,10 @@
 import type { ProjectLayerConfig } from "./types";
 
+// Layers on at the opening: defaultVisibleMobile overrides defaultVisible in the mobile layout.
+export function defaultLayerIds(layers: ProjectLayerConfig[], mobile: boolean): string[] {
+  return layers.filter(layer => mobile ? layer.defaultVisibleMobile ?? layer.defaultVisible : layer.defaultVisible).map(layer => layer.id);
+}
+
 export function isTemporalLayer(layer: ProjectLayerConfig): layer is ProjectLayerConfig & {
   temporalCampaign: NonNullable<ProjectLayerConfig["temporalCampaign"]>;
 } {

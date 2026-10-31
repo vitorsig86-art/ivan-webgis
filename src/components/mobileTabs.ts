@@ -1,5 +1,12 @@
 import type { IconName } from "./icons";
 
+// Same width as the CSS that swaps the side panel for the bottom bar.
+export const MOBILE_MEDIA_QUERY = "(max-width: 760px)";
+
+export function isMobileLayout(): boolean {
+  return typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia(MOBILE_MEDIA_QUERY).matches;
+}
+
 // Mobile bottom bar. "Camadas" (always first) opens the layer sheet; these tabs
 // choose the one overlay shown over the map.
 export type MobileView = "time" | "measure" | "legend";

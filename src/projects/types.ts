@@ -73,6 +73,9 @@ export interface ProjectLayerConfig {
   kind: LayerKind;
   source: LayerSource;
   defaultVisible: boolean;
+  // Initial visibility in the mobile layout (bottom bar, max-width 760px).
+  // Default: defaultVisible. Only the opening changes; the panel still toggles the layer.
+  defaultVisibleMobile?: boolean;
   opacityControl?: boolean;
   legend?: LegendConfig;
   // "external": legend card from `legend`. "embedded": the scale is drawn into
@@ -112,8 +115,9 @@ export interface VectorPopupConfig {
   actions?: VectorPopupAction[];
   // Open this popup on its own at the opening view and after Home, over the
   // layer's first feature, while the layer is visible. One layer per project;
-  // the first configured one wins. Default false.
-  openOnHome?: boolean;
+  // the first configured one wins. "desktop": only outside the mobile layout.
+  // Default false. A tap on the feature always opens the popup.
+  openOnHome?: boolean | "desktop";
   title?: string;
   titleProperty?: string;
   titlePrefix?: string;

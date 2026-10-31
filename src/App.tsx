@@ -16,11 +16,11 @@ import { TemporalSelector } from "./components/TemporalSelector";
 import { canCompare } from "./components/temporal";
 import { DEFAULT_TEMPORAL_LAYER_NAME } from "./components/LayerPanel";
 import { Icon } from "./components/icons";
-import { activeMobileView as resolveMobileView, initialMobileState, shownMobileTabs, type MobileView } from "./components/mobileTabs";
-import { configuredVisibility, isTemporalLayer } from "./projects/layerVisibility";
+import { activeMobileView as resolveMobileView, initialMobileState, isMobileLayout, shownMobileTabs, type MobileView } from "./components/mobileTabs";
+import { configuredVisibility, defaultLayerIds, isTemporalLayer } from "./projects/layerVisibility";
 import { applyProjectCamera, beginManagedFlight, captureCamera, flyToCamera, flyToCameraSettled, restoreCamera, type CameraSnapshot } from "./cesium/projectCamera";
 import { HeadingPitchRange, Math as CesiumMath, type Entity } from "cesium";
-import type { VectorPopupActionLink } from "./cesium/vectorPopup";
+import { opensOnHome, type VectorPopupActionLink } from "./cesium/vectorPopup";
 
 import { useCesiumViewer } from "./hooks/useCesiumViewer";
 import { useProjectLayers } from "./hooks/useProjectLayers";
@@ -31,8 +31,15 @@ const ModelDevelopmentTools = import.meta.env.DEV ? lazy(() => import("./compone
 const CameraCapturePanel = import.meta.env.DEV ? lazy(() => import("./components/CameraCapturePanel")) : null;
 const EmbeddedPageOverlay = lazy(() => import("./components/EmbeddedPageOverlay"));
 
+// Layout at load time: the mobile opening uses defaultVisibleMobile.
 function defaultVisibility(project: ProjectConfig) {
-  return configuredVisibility(project.layers, project.layers.filter((layer) => layer.defaultVisible).map((layer) => layer.id));
+  return configuredVisibility(project.layers, defaultLayerIds(project.layers, isMobileLayout()));
+}
+
+// popup.openOnHome for the current layout (checked at the opening and at each Home).
+function homePopupActive(project: ProjectConfig) {
+  const mobile = isMobileLayout();
+  return project.layers.some(layer => layer.source.format === "geojson" && opensOnHome(layer.source.popup, mobile));
 }
 
 export function App() {
@@ -43,7 +50,8 @@ export function App() {
   // over the map. Default tab: "Tempo" with campaigns, otherwise "Camadas".
   const hasCampaigns = project.layers.some(isTemporalLayer);
   // popup.openOnHome: open that popup at the opening view and after every Home.
-  const hasHomePopup = project.layers.some(layer => layer.source.format === "geojson" && layer.source.popup?.openOnHome);
+  const [hasHomePopup] = useState(() => homePopupActive(project));
+  const homePopupConfigured = project.layers.some(layer => layer.source.format === "geojson" && layer.source.popup?.openOnHome);
   const [homePopupRequest, setHomePopupRequest] = useState(() => hasHomePopup ? 1 : 0);
   const [panelOpen, setPanelOpen] = useState(() => initialMobileState(hasCampaigns, hasHomePopup).panelOpen);
   const [sheetHigh, setSheetHigh] = useState(false);
@@ -201,7 +209,11 @@ export function App() {
         } : undefined} onExitComparison={() => setComparison(null)} />
       <div className="map-tools">
         <NavigationControls viewer={viewer} homeCamera={project.initialCamera} disabled={Boolean(error)} area={navigationArea}
-          onHome={hasHomePopup ? () => { setPanelOpen(false); setHomePopupRequest(request => request + 1); } : undefined} />
+          onHome={homePopupConfigured ? () => {
+            if (!homePopupActive(project)) return;
+            setPanelOpen(false);
+            setHomePopupRequest(request => request + 1);
+          } : undefined} />
         <MeasurementToolbar viewer={viewer} disabled={Boolean(error)} />
       </div>
       <VectorPopup viewer={viewer} allowedOrigins={project.embeddedPages?.allowedOrigins} onOpenPage={openPage} homeRequest={homePopupRequest} />
