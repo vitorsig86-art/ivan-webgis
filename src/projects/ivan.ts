@@ -132,8 +132,9 @@ const matriculas: ProjectLayerConfig = {
 
 // Área de estudo com a simulação 3D de café keyline, como no Jurema. Estilo do Jurema
 // (3 px, preenchimento 0.18, zIndex 25) em laranja, para não confundir com o amarelo
-// das matrículas. O botão abre a simulação sobre o mapa depois de voar até a área
-// (flyTo padrão); a origem está liberada em embeddedPages.
+// das matrículas. O botão abre a simulação sobre o mapa sem mover a câmera
+// (flyTo false) e, ao fechar, a câmera fica onde estava (onClose "keep");
+// a origem está liberada em embeddedPages.
 const simulationUrl = "https://cafe-keyline-3d.vercel.app/";
 const areaEstudo: ProjectLayerConfig = {
   id: "area-estudo", name: "Área de Estudo", description: "Simulação 3D de café keyline", kind: "vector", defaultVisible: true, opacityControl: true,
@@ -146,7 +147,7 @@ const areaEstudo: ProjectLayerConfig = {
         { property: "area_ha", label: "Área", decimals: 2, suffix: " ha" },
         { property: "perimetro_km", label: "Perímetro", decimals: 2, suffix: " km" },
       ],
-      actions: [{ label: "Entrar na simulação 3D", url: simulationUrl }],
+      actions: [{ label: "Entrar na simulação 3D", url: simulationUrl, flyTo: false, onClose: "keep" }],
       // Abre sozinho na abertura e a cada Home, com o botão da simulação visível.
       openOnHome: true,
     },

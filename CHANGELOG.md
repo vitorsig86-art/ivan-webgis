@@ -15,8 +15,18 @@ Mudanças do Cardeal Map template, da mais recente para a mais antiga. Projetos 
   - No celular o popup fica dentro do mapa (que termina acima da barra inferior) e desvia da barra: não a cobre.
   - Ao portar: incluir testes em `check-ui.cjs` (`initialMobileState(false, true)`) e um check de `findHomePopupEntity` com entidades sintéticas; documentar em `TEMPLATE_FEATURES.md`.
 
+### Corrigido — genérico, PORTAR AO TEMPLATE
+- Página embutida (ação de popup em overlay) não deixa mais a câmera longe. Causa: sem `flyTo` na ação, o padrão `true` rodava `viewer.flyTo` até a feição com `range 0`, e o Cesium escolhia a distância pela esfera envolvente da área, bem mais longe que a vista do usuário.
+  - `VectorPopupAction.onClose`: `"keep"` (padrão) ou `"home"`. Ao abrir, a câmera é salva; ao fechar, `"keep"` restaura a posição salva sem animação (só se algo a moveu) e `"home"` vai direto para a `initialCamera`.
+  - `VectorPopupAction.flyTo` aceita `"home"` (voo até a vista Home antes de abrir), como no Jurema; `false` mantém a câmera.
+  - `src/cesium/projectCamera.ts`: `captureCamera`, `restoreCamera` e `flyToCameraSettled` (APIs públicas do Cesium 1.146: `positionWC`, `setView`, `cancelFlight`).
+  - `src/App.tsx`: `closePage` aplica o `onClose`; `src/cesium/vectorPopup.ts` normaliza o padrão.
+  - `scripts/check-projects.cjs`: `URL` disponível no contexto dos checks (configs que usam `new URL`).
+  - Ao portar: estender `check-embedded-pages.cjs` com `onClose` (padrão `"keep"`) e `flyTo: "home"`; documentar em `TEMPLATE_FEATURES.md`.
+
 ### Projeto
 - Área de Estudo (`area-estudo`) com `popup.openOnHome: true`.
+- Ação "Entrar na simulação 3D" com `flyTo: false` e `onClose: "keep"`: a câmera não se move ao abrir nem ao fechar a simulação.
 
 ## [3.0.0] — 2026-10-30 — Redesign visual do Jurema
 

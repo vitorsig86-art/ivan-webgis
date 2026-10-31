@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { appTitle } from "./appTitle";
 import { projects } from "./projects";
 import { LayerPanel } from "./components/LayerPanel";
@@ -18,7 +18,7 @@ import { DEFAULT_TEMPORAL_LAYER_NAME } from "./components/LayerPanel";
 import { Icon } from "./components/icons";
 import { activeMobileView as resolveMobileView, initialMobileState, shownMobileTabs, type MobileView } from "./components/mobileTabs";
 import { configuredVisibility, isTemporalLayer } from "./projects/layerVisibility";
-import { beginManagedFlight, flyToCamera } from "./cesium/projectCamera";
+import { applyProjectCamera, beginManagedFlight, captureCamera, flyToCamera, flyToCameraSettled, restoreCamera, type CameraSnapshot } from "./cesium/projectCamera";
 import { HeadingPitchRange, Math as CesiumMath, type Entity } from "cesium";
 import type { VectorPopupActionLink } from "./cesium/vectorPopup";
 
@@ -56,6 +56,8 @@ export function App() {
   const [diagnosticStep, setDiagnosticStep] = useState(0);
   const [comparison, setComparison] = useState<TemporalComparisonSelection | null>(null);
   const [page, setPage] = useState<{ url: string; title: string } | null>(null);
+  // Camera when the page opened and what to do with it on close (action.onClose).
+  const pageCamera = useRef<{ snapshot: CameraSnapshot; onClose: "keep" | "home" } | null>(null);
   // DEV capture panel only: frame views at the edge of the navigation limit.
   const [ignoreLimits, setIgnoreLimits] = useState(false);
   const captureEnabled = Boolean(CameraCapturePanel && project.developmentTools?.cameraCapture);
@@ -92,7 +94,9 @@ export function App() {
     if (action.target === "tab") { window.open(action.url, "_blank", "noopener"); return; }
     if (viewer && !viewer.isDestroyed()) {
       viewer.selectedEntity = undefined;
-      if (action.flyTo) {
+      if (action.flyTo === "home") {
+        await flyToCameraSettled(viewer, project.initialCamera, 1.6);
+      } else if (action.flyTo) {
         const target = entity.parent?.polygon ? entity.parent : entity;
         const end = beginManagedFlight(viewer);
         try {
@@ -100,8 +104,20 @@ export function App() {
         } finally { end(); }
       }
     }
+    pageCamera.current = viewer && !viewer.isDestroyed() ? { snapshot: captureCamera(viewer), onClose: action.onClose } : null;
     setPage({ url: action.url, title });
   }
+
+  // Closing the page never animates: "keep" restores the pose saved at opening
+  // (only if something moved it), "home" jumps to the opening view.
+  const closePage = useCallback(() => {
+    const saved = pageCamera.current;
+    pageCamera.current = null;
+    setPage(null);
+    if (!saved || !viewer || viewer.isDestroyed()) return;
+    if (saved.onClose === "home") applyProjectCamera(viewer, project);
+    else restoreCamera(viewer, saved.snapshot);
+  }, [viewer, project]);
 
   function toggleLayer(id: string) {
     if (comparison && campaigns.some(layer => layer.id === id)) return;
@@ -189,7 +205,7 @@ export function App() {
         <MeasurementToolbar viewer={viewer} disabled={Boolean(error)} />
       </div>
       <VectorPopup viewer={viewer} allowedOrigins={project.embeddedPages?.allowedOrigins} onOpenPage={openPage} homeRequest={homePopupRequest} />
-      {page && <Suspense fallback={null}><EmbeddedPageOverlay url={page.url} title={page.title} onClose={() => setPage(null)} /></Suspense>}
+      {page && <Suspense fallback={null}><EmbeddedPageOverlay url={page.url} title={page.title} onClose={closePage} /></Suspense>}
       {ModelDevelopmentTools && (project.developmentTools?.modelAlignment || project.developmentTools?.cropAuthoring) &&
         <Suspense fallback={null}>
           {project.layers.filter(layer => layer.source.format === "3d-tiles" && visible.has(layer.id)).map(layer =>

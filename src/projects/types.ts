@@ -101,8 +101,11 @@ export interface VectorPopupAction {
   urlProperty?: string;
   // "overlay" (default) opens the page over the map; "tab" opens a new tab.
   target?: "overlay" | "tab";
-  // Overlay only: fly to the feature before opening. Default true.
-  flyTo?: boolean;
+  // Overlay only: true flies to the feature, "home" to the Home view, false keeps the camera. Default true.
+  flyTo?: boolean | "home";
+  // Overlay only, on close: "keep" (default) puts the camera back exactly where it
+  // was when the page opened, without animation; "home" jumps to initialCamera.
+  onClose?: "keep" | "home";
 }
 
 export interface VectorPopupConfig {

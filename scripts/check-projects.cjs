@@ -12,7 +12,7 @@ function load(file, dependencies = {}, globals = {}) {
   const code = ts.transpileModule(fs.readFileSync(path.join(root, file), "utf8").replaceAll("import.meta.env", "({})"), {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
   }).outputText;
-  vm.runInNewContext(code, { exports, setTimeout, clearTimeout, structuredClone, require: (name) => dependencies[name] ?? (name.startsWith(".") ? load(path.join(path.dirname(file), name + ".ts"), dependencies) : require(name)), ...globals });
+  vm.runInNewContext(code, { exports, setTimeout, clearTimeout, structuredClone, URL, require: (name) => dependencies[name] ?? (name.startsWith(".") ? load(path.join(path.dirname(file), name + ".ts"), dependencies) : require(name)), ...globals });
   return exports;
 }
 const { appTitle } = load("src/appTitle.ts");

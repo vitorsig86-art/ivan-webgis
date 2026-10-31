@@ -5,7 +5,8 @@ export interface VectorPopupActionLink {
   label: string;
   url: string;
   target: "overlay" | "tab";
-  flyTo: boolean;
+  flyTo: boolean | "home";
+  onClose: "keep" | "home";
 }
 
 // Returns the normalized URL when it is https and its origin is allowed.
@@ -103,7 +104,7 @@ export function readVectorPopup(entity: Entity | undefined, time = JulianDate.no
     }),
     actions: (config.actions ?? []).flatMap((action): VectorPopupActionLink[] => {
       const url = allowedPageUrl(action.url ?? (action.urlProperty ? properties[action.urlProperty] : undefined), allowedOrigins);
-      return url ? [{ label: action.label, url, target: action.target ?? "overlay", flyTo: action.flyTo ?? true }] : [];
+      return url ? [{ label: action.label, url, target: action.target ?? "overlay", flyTo: action.flyTo ?? true, onClose: action.onClose ?? "keep" }] : [];
     }),
   };
 }
