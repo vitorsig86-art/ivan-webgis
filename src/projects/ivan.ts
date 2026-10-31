@@ -58,6 +58,71 @@ const modelo: ProjectLayerConfig = {
   },
 };
 
+// Vetores: GeoJSON em CRS84, sem Z, com id único (sem uniqueFeatureIds).
+const geojson = (file: string) => `${r2}/geojson/${file}`;
+
+const contours = (id: string, file: string, name: string): ProjectLayerConfig => ({
+  id, name, description: name, kind: "contours", defaultVisible: false, exclusiveGroup: "curvas",
+  source: {
+    format: "geojson", url: geojson(file), autoZoom: false,
+    style: { stroke: "#000000", strokeWidth: 1, clampToGround: true, zIndex: 5 },
+    popup: { title: "Curva de nível", fields: [{ property: "cota_m", label: "Cota", suffix: " m", format: "integer" }] },
+  },
+});
+
+const microbacias: ProjectLayerConfig = {
+  id: "microbacias", name: "Microbacias", description: "Microbacias", kind: "vector", defaultVisible: false,
+  source: {
+    format: "geojson", url: geojson("microbacias.geojson"), autoZoom: false,
+    // Só contorno: preenchimento transparente (ainda clicável para o popup).
+    style: { stroke: "#FFFFFF", strokeWidth: 1.5, fillOpacity: 0, clampToGround: true, zIndex: 3 },
+    popup: { titleProperty: "nome", fields: [
+      { property: "area_ha", label: "Área", decimals: 2, suffix: " ha" },
+      { property: "perimetro_km", label: "Perímetro", decimals: 2, suffix: " km" },
+    ] },
+  },
+};
+
+// Ordem de Strahler por classificação simples (sem a symbology simulated-drainage-strahler).
+const drenagem: ProjectLayerConfig = {
+  id: "drenagem", name: "Drenagem", description: "Drenagem", kind: "drainage", defaultVisible: false,
+  source: {
+    format: "geojson", url: geojson("drenagem.geojson"), autoZoom: false,
+    style: {
+      stroke: "#00E5FF", strokeWidth: 1, clampToGround: true, zIndex: 10,
+      classification: { property: "STRAHLER", classes: {
+        1: { stroke: "#00E5FF", strokeWidth: 1, zIndex: 10 },
+        2: { stroke: "#14B8F0", strokeWidth: 1.6, zIndex: 11 },
+        3: { stroke: "#1E88E5", strokeWidth: 2.4, zIndex: 12 },
+        4: { stroke: "#1546D8", strokeWidth: 3.4, zIndex: 13 },
+        5: { stroke: "#0B2A9E", strokeWidth: 4.4, zIndex: 14 },
+      } },
+    },
+    popup: { title: "Drenagem", fields: [
+      { property: "STRAHLER", label: "Ordem de Strahler", format: "integer" },
+      { property: "area_contribuicao_ha", label: "Área de contribuição", decimals: 2, suffix: " ha" },
+    ] },
+  },
+};
+
+const estradas: ProjectLayerConfig = {
+  id: "estradas", name: "Estradas", description: "Estradas", kind: "vector", defaultVisible: false,
+  source: {
+    format: "geojson", url: geojson("estradas.geojson"), autoZoom: false,
+    // Polígonos preenchidos, sem contorno (stroke só atende ao tipo).
+    style: { stroke: "#8B5A2B", strokeWidth: 1, fill: "#8B5A2B", fillOpacity: 0.6, polygonOutline: false, clampToGround: true, zIndex: 15 },
+  },
+};
+
+const matriculas: ProjectLayerConfig = {
+  id: "matriculas", name: "Matrículas", description: "Matrículas", kind: "property-boundary", defaultVisible: true,
+  source: {
+    format: "geojson", url: geojson("perimetros.geojson"), autoZoom: false,
+    style: { stroke: "#FFD400", strokeWidth: 2.5, fillOpacity: 0, clampToGround: true, zIndex: 20 },
+    popup: { titleProperty: "nome", fields: [] },
+  },
+};
+
 export const project: ProjectConfig = {
   ...templateProject,
   id: "ivan",
@@ -78,6 +143,12 @@ export const project: ProjectConfig = {
     derived("mds", "mds", "Modelo Digital de Superfície", "dsm"),
     derived("declividade", "decli", "Declividade", "slope"),
     derived("aspecto", "aspect", "Orientação de Vertentes", "aspect"),
+    microbacias,
+    contours("curvas2", "curvas_2m.geojson", "Curvas de Nível (2 m)"),
+    contours("curvas3", "curvas_3m.geojson", "Curvas de Nível (3 m)"),
+    drenagem,
+    estradas,
+    matriculas,
     modelo,
   ],
   scenes: [],
