@@ -50,10 +50,9 @@ export const project: ProjectConfig = {
   // dos XMLs é de tiles inteiros, não o contorno dos dados. Capture os bounds
   // reais com "Capturar bounds da vista" (npm run dev) e preencha aqui.
   // bounds: [W, S, E, N],
-  // PROVISÓRIA: vista de cima sobre os dados do orto (canto sudeste do BoundingBox,
-  // tiles 14/6150-6151/7169-7170). Substitua por
-  // "Capturar Home" (cameraCapture). Ângulos em graus; altura em metros sobre o elipsoide.
-  initialCamera: { longitude: -44.852, latitude: -21.895, height: 5500, heading: 0, pitch: -90, roll: 0 },
+  // Abertura e Home, capturadas com "Capturar Home" (cameraCapture).
+  // Ângulos em graus; altura em metros sobre o elipsoide.
+  initialCamera: { longitude: -44.8585743, latitude: -21.8817342, height: 1810.6, heading: 156.20, pitch: -35.23, roll: 0.00 },
   // Ordem = empilhamento: o último item fica por cima.
   layers: [
     basemap,
