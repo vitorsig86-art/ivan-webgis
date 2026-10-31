@@ -134,7 +134,8 @@ const matriculas: ProjectLayerConfig = {
 // (3 px, preenchimento 0.18, zIndex 25) em laranja, para não confundir com o amarelo
 // das matrículas. O botão abre a simulação sobre o mapa sem mover a câmera
 // (flyTo false) e, ao fechar, a câmera fica onde estava (onClose "keep");
-// a origem está liberada em embeddedPages.
+// a origem está liberada em embeddedPages. Ligada na abertura do desktop e
+// desligada na do celular (defaultVisibleMobile: false).
 const simulationUrl = "https://cafe-keyline-3d.vercel.app/";
 const areaEstudo: ProjectLayerConfig = {
   id: "area-estudo", name: "Área de Estudo", description: "Simulação 3D de café keyline", kind: "vector", defaultVisible: true, defaultVisibleMobile: false, opacityControl: true,
@@ -148,9 +149,7 @@ const areaEstudo: ProjectLayerConfig = {
         { property: "perimetro_km", label: "Perímetro", decimals: 2, suffix: " km" },
       ],
       actions: [{ label: "Entrar na simulação 3D", url: simulationUrl, flyTo: false, onClose: "keep" }],
-      // Abre sozinho na abertura e a cada Home só no desktop; no celular a camada
-      // começa desligada (defaultVisibleMobile) e o popup abre ao tocar no polígono.
-      openOnHome: "desktop",
+      // Sem openOnHome: o popup só abre ao clicar ou tocar no polígono.
     },
   },
 };

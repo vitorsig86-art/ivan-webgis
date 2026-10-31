@@ -35,8 +35,7 @@ Mudanças do Cardeal Map template, da mais recente para a mais antiga. Projetos 
   - Ao portar: estender `check-embedded-pages.cjs` com `onClose` (padrão `"keep"`) e `flyTo: "home"`; documentar em `TEMPLATE_FEATURES.md`.
 
 ### Projeto
-- Área de Estudo (`area-estudo`) com `popup.openOnHome: true`.
-- Área de Estudo com `defaultVisibleMobile: false` e `popup.openOnHome: "desktop"`: no celular a abertura mostra só Ortomosaico e Matrículas (além do mapa base), sem popup.
+- Área de Estudo (`area-estudo`) com `defaultVisibleMobile: false` e sem `popup.openOnHome`: o popup nunca abre sozinho (nem na abertura nem no Home, em nenhum aparelho), só ao clicar ou tocar no polígono. Desktop abre com Ortomosaico, Matrículas e Área de Estudo; celular, só com Ortomosaico e Matrículas (além do mapa base). O `openOnHome` (inclusive `"desktop"`) continua disponível no código genérico, sem uso no Ivan.
 - Ação "Entrar na simulação 3D" com `flyTo: false` e `onClose: "keep"`: a câmera não se move ao abrir nem ao fechar a simulação.
 
 ## [3.0.0] — 2026-10-30 — Redesign visual do Jurema
