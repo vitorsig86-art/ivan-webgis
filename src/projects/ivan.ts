@@ -61,8 +61,8 @@ const modelo: ProjectLayerConfig = {
 // Vetores: GeoJSON em CRS84, sem Z, com id único (sem uniqueFeatureIds).
 const geojson = (file: string) => `${r2}/geojson/${file}`;
 
-const contours = (id: string, file: string, name: string): ProjectLayerConfig => ({
-  id, name, description: name, kind: "contours", defaultVisible: false, exclusiveGroup: "curvas",
+const contours = (id: string, file: string, name: string, panelOrder: number): ProjectLayerConfig => ({
+  id, name, description: name, kind: "contours", defaultVisible: false, exclusiveGroup: "curvas", panelOrder,
   source: {
     format: "geojson", url: geojson(file), autoZoom: false,
     style: { stroke: "#000000", strokeWidth: 1, clampToGround: true, zIndex: 5 },
@@ -73,7 +73,7 @@ const contours = (id: string, file: string, name: string): ProjectLayerConfig =>
 // Uma cor por microbacia pelo atributo "cor" (0 a 9): preenchimento e contorno iguais.
 const microbaciaColors = ["#E6194B", "#3CB44B", "#FFE119", "#4363D8", "#F58231", "#911EB4", "#42D4F4", "#F032E6", "#BFEF45", "#FABED4"];
 const microbacias: ProjectLayerConfig = {
-  id: "microbacias", name: "Microbacias", description: "Microbacias", kind: "vector", defaultVisible: false, opacityControl: true,
+  id: "microbacias", name: "Microbacias", description: "Microbacias", kind: "vector", defaultVisible: false, panelOrder: 3, opacityControl: true,
   source: {
     format: "geojson", url: geojson("microbacias.geojson"), autoZoom: false,
     style: {
@@ -92,7 +92,7 @@ const microbacias: ProjectLayerConfig = {
 
 // Ordem de Strahler por classificação simples (sem a symbology simulated-drainage-strahler).
 const drenagem: ProjectLayerConfig = {
-  id: "drenagem", name: "Drenagem", description: "Drenagem", kind: "drainage", defaultVisible: false,
+  id: "drenagem", name: "Drenagem", description: "Drenagem", kind: "drainage", defaultVisible: false, panelOrder: 6,
   source: {
     format: "geojson", url: geojson("drenagem.geojson"), autoZoom: false,
     style: {
@@ -113,7 +113,7 @@ const drenagem: ProjectLayerConfig = {
 };
 
 const estradas: ProjectLayerConfig = {
-  id: "estradas", name: "Estradas", description: "Estradas", kind: "vector", defaultVisible: false,
+  id: "estradas", name: "Estradas", description: "Estradas", kind: "vector", defaultVisible: false, panelOrder: 7,
   source: {
     format: "geojson", url: geojson("estradas.geojson"), autoZoom: false,
     // Polígonos preenchidos, sem contorno (stroke só atende ao tipo).
@@ -122,7 +122,7 @@ const estradas: ProjectLayerConfig = {
 };
 
 const matriculas: ProjectLayerConfig = {
-  id: "matriculas", name: "Matrículas", description: "Matrículas", kind: "property-boundary", defaultVisible: true,
+  id: "matriculas", name: "Matrículas", description: "Matrículas", kind: "property-boundary", defaultVisible: true, panelOrder: 2,
   source: {
     format: "geojson", url: geojson("perimetros.geojson"), autoZoom: false,
     style: { stroke: "#FFD400", strokeWidth: 2.5, fillOpacity: 0, clampToGround: true, zIndex: 20 },
@@ -138,7 +138,7 @@ const matriculas: ProjectLayerConfig = {
 // desligada na do celular (defaultVisibleMobile: false).
 const simulationUrl = "https://cafe-keyline-3d.vercel.app/";
 const areaEstudo: ProjectLayerConfig = {
-  id: "area-estudo", name: "Área de Estudo", description: "Simulação 3D de café keyline", kind: "vector", defaultVisible: true, defaultVisibleMobile: false, opacityControl: true,
+  id: "area-estudo", name: "Área de Estudo", description: "Simulação 3D de café keyline", kind: "vector", defaultVisible: true, defaultVisibleMobile: false, panelOrder: 1, opacityControl: true,
   source: {
     format: "geojson", url: geojson("area_estudo.geojson"), autoZoom: false,
     style: { stroke: "#FF6A00", strokeWidth: 3, fill: "#FF6A00", fillOpacity: 0.18, clampToGround: true, zIndex: 25 },
@@ -166,7 +166,9 @@ export const project: ProjectConfig = {
   // Abertura e Home, capturadas com "Capturar Home" (cameraCapture).
   // Ângulos em graus; altura em metros sobre o elipsoide.
   initialCamera: { longitude: -44.8585743, latitude: -21.8817342, height: 1810.6, heading: 156.20, pitch: -35.23, roll: 0.00 },
-  // Ordem = empilhamento: o último item fica por cima.
+  // Ordem = empilhamento: o último item fica por cima. Entre GeoJSONs vale esta
+  // ordem, não o zIndex (que só ordena dentro de cada camada). A ordem dos vetores
+  // no painel vem de panelOrder.
   layers: [
     basemap,
     orto,
@@ -175,8 +177,8 @@ export const project: ProjectConfig = {
     derived("declividade", "decli", "Declividade", "slope"),
     derived("aspecto", "aspect", "Orientação de Vertentes", "aspect"),
     microbacias,
-    contours("curvas2", "curvas_2m.geojson", "Curvas de Nível (2 m)"),
-    contours("curvas3", "curvas_3m.geojson", "Curvas de Nível (3 m)"),
+    contours("curvas2", "curvas_2m.geojson", "Curvas de Nível (2 m)", 4),
+    contours("curvas3", "curvas_3m.geojson", "Curvas de Nível (3 m)", 5),
     drenagem,
     estradas,
     matriculas,

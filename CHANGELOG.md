@@ -15,6 +15,12 @@ Mudanças do Cardeal Map template, da mais recente para a mais antiga. Projetos 
   - No celular o popup fica dentro do mapa (que termina acima da barra inferior) e desvia da barra: não a cobre.
   - Ao portar: incluir testes em `check-ui.cjs` (`initialMobileState(false, true)`) e um check de `findHomePopupEntity` com entidades sintéticas; documentar em `TEMPLATE_FEATURES.md`.
 
+### Adicionado — ordem no painel — genérico, PORTAR AO TEMPLATE
+- `ProjectLayerConfig.panelOrder` (opcional): posição da camada dentro da seção do painel, crescente; sem ele, vale a ordem do array. Só o painel muda: o empilhamento no mapa continua pela ordem do array `layers`.
+  - Motivo: no Cesium 1.146 cada GeoJSON é um `DataSource` com seu próprio `OrderedGroundPrimitiveCollection` (`DataSourceDisplay.js`); o `zIndex` só ordena dentro da camada, e entre camadas vale a ordem de adição, que segue o array. Mudar o array para reordenar o painel muda o desenho.
+  - `src/components/LayerPanel.tsx`: `getWorkspaceSections` ordena por `panelOrder` (sort estável).
+  - Ao portar: check em `check-workspace.cjs` (ordem com e sem `panelOrder`); documentar em `TEMPLATE_FEATURES.md` e no `NOVO-PROJETO.md`.
+
 ### Adicionado — abertura diferente no celular — genérico, PORTAR AO TEMPLATE
 - `ProjectLayerConfig.defaultVisibleMobile` (padrão: `defaultVisible`): visibilidade inicial no layout mobile (mesma largura da barra inferior, `max-width: 760px`). Só a abertura muda; o painel continua ligando e desligando a camada.
 - `VectorPopupConfig.openOnHome` aceita `"desktop"`: o popup abre sozinho na abertura e no Home só fora do layout mobile. No celular, tocar na feição abre o popup normalmente.
@@ -36,6 +42,7 @@ Mudanças do Cardeal Map template, da mais recente para a mais antiga. Projetos 
 
 ### Projeto
 - Área de Estudo (`area-estudo`) com `defaultVisibleMobile: false` e sem `popup.openOnHome`: o popup nunca abre sozinho (nem na abertura nem no Home, em nenhum aparelho), só ao clicar ou tocar no polígono. Desktop abre com Ortomosaico, Matrículas e Área de Estudo; celular, só com Ortomosaico e Matrículas (além do mapa base). O `openOnHome` (inclusive `"desktop"`) continua disponível no código genérico, sem uso no Ivan.
+- Vetores no painel com `panelOrder`: Área de Estudo, Matrículas, Microbacias, Curvas 2 m, Curvas 3 m, Drenagem, Estradas. Array `layers` inalterado, então o desenho no mapa não muda.
 - Ação "Entrar na simulação 3D" com `flyTo: false` e `onClose: "keep"`: a câmera não se move ao abrir nem ao fechar a simulação.
 
 ## [3.0.0] — 2026-10-30 — Redesign visual do Jurema

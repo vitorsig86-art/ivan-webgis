@@ -76,6 +76,9 @@ export interface ProjectLayerConfig {
   // Initial visibility in the mobile layout (bottom bar, max-width 760px).
   // Default: defaultVisible. Only the opening changes; the panel still toggles the layer.
   defaultVisibleMobile?: boolean;
+  // Position inside its panel section, ascending. Layers without it follow in
+  // array order. Panel only: map stacking still follows the layers array.
+  panelOrder?: number;
   opacityControl?: boolean;
   legend?: LegendConfig;
   // "external": legend card from `legend`. "embedded": the scale is drawn into

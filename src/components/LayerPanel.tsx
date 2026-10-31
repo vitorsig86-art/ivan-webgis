@@ -37,7 +37,9 @@ export function getWorkspaceSections(layers: ProjectLayerConfig[], order: Worksp
   const group = (layer: ProjectLayerConfig): WorkspaceSectionId => layer.group
     ?? (isTemporalLayer(layer) || layer.kind === "basemap" ? "basemap" : layer.source.format === "3d-tiles" ? "model" : layer.source.format === "geojson" ? "vector" : "raster");
   const ids: WorkspaceSectionId[] = ["basemap", "model", "raster", "vector", "macro"];
-  const sections = ids.map(id => ({ id, title: titles[id] ?? DEFAULT_SECTION_TITLES[id], layers: layers.filter(layer => group(layer) === id) }));
+  // panelOrder sorts inside a section (stable sort keeps array order for ties and layers without it).
+  const ordered = [...layers].sort((a, b) => (a.panelOrder ?? Infinity) - (b.panelOrder ?? Infinity));
+  const sections = ids.map(id => ({ id, title: titles[id] ?? DEFAULT_SECTION_TITLES[id], layers: ordered.filter(layer => group(layer) === id) }));
   // Listed sections first (duplicates ignored), then the rest in default order.
   const rank = (id: WorkspaceSectionId) => {
     const index = order.indexOf(id);
