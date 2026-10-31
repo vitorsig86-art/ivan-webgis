@@ -70,12 +70,19 @@ const contours = (id: string, file: string, name: string): ProjectLayerConfig =>
   },
 });
 
+// Uma cor por microbacia pelo atributo "cor" (0 a 9): preenchimento e contorno iguais.
+const microbaciaColors = ["#E6194B", "#3CB44B", "#FFE119", "#4363D8", "#F58231", "#911EB4", "#42D4F4", "#F032E6", "#BFEF45", "#FABED4"];
 const microbacias: ProjectLayerConfig = {
-  id: "microbacias", name: "Microbacias", description: "Microbacias", kind: "vector", defaultVisible: false,
+  id: "microbacias", name: "Microbacias", description: "Microbacias", kind: "vector", defaultVisible: false, opacityControl: true,
   source: {
     format: "geojson", url: geojson("microbacias.geojson"), autoZoom: false,
-    // Só contorno: preenchimento transparente (ainda clicável para o popup).
-    style: { stroke: "#FFFFFF", strokeWidth: 1.5, fillOpacity: 0, clampToGround: true, zIndex: 3 },
+    style: {
+      stroke: "#FFFFFF", strokeWidth: 1.5, fillOpacity: 0.35, clampToGround: true, zIndex: 3,
+      // stroke na classe só serve de reserva do contorno se "cor" vier como texto ("3"):
+      // o outline usa o índice numérico; a classificação aceita os dois.
+      classification: { property: "cor", classes: Object.fromEntries(microbaciaColors.map((color, index) => [String(index), { fill: color, stroke: color }])) },
+      outline: { property: "cor", colors: microbaciaColors, width: 1.5 },
+    },
     popup: { titleProperty: "nome", fields: [
       { property: "area_ha", label: "Área", decimals: 2, suffix: " ha" },
       { property: "perimetro_km", label: "Perímetro", decimals: 2, suffix: " km" },
