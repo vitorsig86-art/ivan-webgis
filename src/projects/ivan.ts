@@ -34,11 +34,28 @@ const derived = (id: string, folder: string, name: string, kind: ProjectLayerCon
 
 // Modelo 3D do Agisoft Metashape no Cesium ion. VITE_CESIUM_3D_TOKEN é igual a
 // VITE_CESIUM_ION_TOKEN no .env.local, então o modelo usa o token principal.
-// heightOffsetMeters 0 até conferir a altura com modelAlignment; sem clipping e
-// sem terrainCutout até desenhar o recorte com cropAuthoring.
 const modelo: ProjectLayerConfig = {
   id: "modelo", name: "Modelo 3D", description: "Modelo 3D (Agisoft Metashape)", kind: "3d-tiles", defaultVisible: false,
-  source: { format: "3d-tiles", source: "ion", assetId: 5030184, tokenEnv: "VITE_CESIUM_ION_TOKEN", heightOffsetMeters: 0 },
+  source: {
+    format: "3d-tiles", source: "ion", assetId: 5030184, tokenEnv: "VITE_CESIUM_ION_TOKEN",
+    // 0: modelo assenta no World Terrain sem offset; referencial vertical do asset a confirmar no ion
+    heightOffsetMeters: 0,
+    // Recorte desenhado com cropAuthoring (lon, lat em graus): mostra só o interior do polígono.
+    clipping: {
+      enabled: true,
+      inverse: true,
+      positions: [
+        [-44.8381981, -21.8947421],
+        [-44.8422660, -21.8860875],
+        [-44.8437372, -21.8849261],
+        [-44.8503949, -21.8833502],
+        [-44.8646316, -21.8893870],
+        [-44.8584773, -21.9022867],
+        [-44.8573668, -21.9024460],
+      ],
+    },
+    terrainCutout: false,
+  },
 };
 
 export const project: ProjectConfig = {
@@ -65,7 +82,6 @@ export const project: ProjectConfig = {
   ],
   scenes: [],
   diagnostic: { steps: [] },
-  // Ferramentas só aparecem em npm run dev. modelAlignment e cropAuthoring: conferir
-  // a altura e desenhar o recorte do modelo; desligue todas ao finalizar.
-  developmentTools: { modelAlignment: true, cropAuthoring: true, cameraCapture: true },
+  // Ferramentas de desenvolvimento desligadas: Home, altura e recorte já definidos.
+  developmentTools: { modelAlignment: false, cropAuthoring: false, cameraCapture: false },
 };
