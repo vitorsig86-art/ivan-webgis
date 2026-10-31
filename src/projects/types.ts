@@ -107,6 +107,10 @@ export interface VectorPopupAction {
 
 export interface VectorPopupConfig {
   actions?: VectorPopupAction[];
+  // Open this popup on its own at the opening view and after Home, over the
+  // layer's first feature, while the layer is visible. One layer per project;
+  // the first configured one wins. Default false.
+  openOnHome?: boolean;
   title?: string;
   titleProperty?: string;
   titlePrefix?: string;

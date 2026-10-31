@@ -13,9 +13,11 @@ interface NavigationControlsProps {
   disabled?: boolean;
   // Navigation limit; GPS does not fly the camera outside it.
   area?: NavigationArea | null;
+  // Runs when the Home flight reaches the initial view (e.g. popup.openOnHome).
+  onHome?: () => void;
 }
 
-export function NavigationControls({ viewer, homeCamera, disabled = false, area = null }: NavigationControlsProps) {
+export function NavigationControls({ viewer, homeCamera, disabled = false, area = null, onHome }: NavigationControlsProps) {
   const compassRef = useRef<HTMLSpanElement>(null);
   const unavailable = disabled || !viewer || viewer.isDestroyed();
   const location = useGeolocation(unavailable ? null : viewer, area);
@@ -79,7 +81,7 @@ export function NavigationControls({ viewer, homeCamera, disabled = false, area 
 
   function goHome() {
     if (unavailable || !viewer || !homeCamera) return;
-    flyToCamera(viewer, homeCamera);
+    flyToCamera(viewer, homeCamera, undefined, onHome);
   }
 
   return (

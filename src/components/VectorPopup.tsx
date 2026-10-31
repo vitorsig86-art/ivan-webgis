@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Cartesian2, Entity, type Viewer } from "cesium";
-import { readVectorPopup, resolveVectorPopupSelection, type VectorPopupActionLink } from "../cesium/vectorPopup";
+import { findHomePopupEntity, homePopupPoint, readVectorPopup, resolveVectorPopupSelection, type VectorPopupActionLink } from "../cesium/vectorPopup";
 import { placePopup, type ScreenPoint } from "./popupPosition";
 import { Icon } from "./icons";
 import "./VectorPopup.css";
@@ -17,12 +17,17 @@ interface Props {
   viewer: Viewer | null;
   allowedOrigins?: readonly string[];
   onOpenPage?: (page: { action: VectorPopupActionLink; title: string; entity: Entity }) => void;
+  // Increment to open the popup configured with popup.openOnHome (opening view and Home).
+  homeRequest?: number;
 }
 
-export function VectorPopup({ viewer, allowedOrigins = NO_ORIGINS, onOpenPage }: Props) {
+export function VectorPopup({ viewer, allowedOrigins = NO_ORIGINS, onOpenPage, homeRequest = 0 }: Props) {
   const [popup, setPopup] = useState<ReturnType<typeof readVectorPopup>>(null);
   const popupRef = useRef<HTMLElement>(null);
   const clickRef = useRef<ScreenPoint | null>(null);
+  // Pending openOnHome request: started at (ms), cancelled by any click on the map.
+  const homePending = useRef<number | null>(null);
+  useEffect(() => { if (homeRequest > 0) homePending.current = performance.now(); }, [homeRequest]);
   const [anchor, setAnchor] = useState<ScreenPoint | null>(null);
   const [placement, setPlacement] = useState<{ left: number; top: number; maxWidth: number; maxHeight: number } | null>(null);
   useEffect(() => {
@@ -34,7 +39,19 @@ export function VectorPopup({ viewer, allowedOrigins = NO_ORIGINS, onOpenPage }:
       setAnchor(clickRef.current);
     };
     // Observe clicks without replacing Cesium's picking or input actions.
-    const rememberPoint = (event: PointerEvent) => { clickRef.current = { x: event.clientX, y: event.clientY }; };
+    const rememberPoint = (event: PointerEvent) => { homePending.current = null; clickRef.current = { x: event.clientX, y: event.clientY }; };
+    // Opens once the feature is loaded and visible, after the terrain under the
+    // view loads (so the anchor sits on the ground), or after 5 s at the latest.
+    const openHomePopup = () => {
+      const since = homePending.current;
+      if (since === null || viewer.isDestroyed()) return;
+      const entity = findHomePopupEntity(viewer);
+      if (!entity || (!viewer.scene.globe.tilesLoaded && performance.now() - since < 5000)) return;
+      homePending.current = null;
+      clickRef.current = homePopupPoint(viewer, entity, viewer.clock.currentTime) ?? null;
+      if (viewer.selectedEntity === entity) update();
+      else viewer.selectedEntity = entity;
+    };
     const clicked = (event: MouseEvent) => {
       clickRef.current = { x: event.clientX, y: event.clientY };
       if (!viewer.isDestroyed() && readVectorPopup(viewer.selectedEntity, viewer.clock.currentTime)) {
@@ -50,7 +67,7 @@ export function VectorPopup({ viewer, allowedOrigins = NO_ORIGINS, onOpenPage }:
     canvas.addEventListener("click", clicked);
     update();
     const remove = viewer.selectedEntityChanged.addEventListener(update);
-    const removeTick = viewer.clock.onTick.addEventListener(update);
+    const removeTick = viewer.clock.onTick.addEventListener(() => { openHomePopup(); update(); });
     return () => {
       removeTick();
       remove();
@@ -63,7 +80,7 @@ export function VectorPopup({ viewer, allowedOrigins = NO_ORIGINS, onOpenPage }:
     if (!popup || !viewer || viewer.isDestroyed() || !popupRef.current) return;
     const element = popupRef.current;
     const shell = element.closest(".app-shell");
-    const controls = [...(shell?.querySelectorAll<HTMLElement>(".measurement-controls, .navigation-controls, .raster-legend-stack, .map-alert, .cesium-viewer-bottom") ?? [])];
+    const controls = [...(shell?.querySelectorAll<HTMLElement>(".measurement-controls, .navigation-controls, .raster-legend-stack, .map-alert, .cesium-viewer-bottom, .temporal-timeline, .period-badge, .map-hint, .mobile-bar") ?? [])];
     const position = () => {
       if (viewer.isDestroyed()) return;
       const map = viewer.canvas.getBoundingClientRect();

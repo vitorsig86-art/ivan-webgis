@@ -1,4 +1,4 @@
-import { ColorMaterialProperty, JulianDate, type Entity } from "cesium";
+import { BoundingSphere, Cartesian3, Cartographic, ColorMaterialProperty, JulianDate, SceneTransforms, type Entity, type PolygonHierarchy, type Viewer } from "cesium";
 import type { VectorPopupConfig } from "../projects/types";
 
 export interface VectorPopupActionLink {
@@ -24,6 +24,39 @@ const configurations = new WeakMap<Entity, VectorPopupConfig>();
 
 export function registerVectorPopup(entity: Entity, config: VectorPopupConfig): void {
   configurations.set(entity, config);
+}
+
+// popup.openOnHome: the first visible feature of a layer configured to open its
+// popup at the opening view and after Home. Outline helpers (entities with a
+// parent) are skipped; the feature itself owns the popup. Public APIs only.
+export function findHomePopupEntity(viewer: Viewer): Entity | undefined {
+  if (viewer.isDestroyed()) return undefined;
+  for (let index = 0; index < viewer.dataSources.length; index++) {
+    const dataSource = viewer.dataSources.get(index);
+    if (!dataSource.show) continue;
+    for (const entity of dataSource.entities.values) {
+      if (!entity.parent && entity.isShowing && configurations.get(entity)?.openOnHome) return entity;
+    }
+  }
+  return undefined;
+}
+
+// Screen point (viewport CSS pixels, like a click) at the center of the
+// feature, raised to the terrain so a ground-clamped polygon lines up.
+export function homePopupPoint(viewer: Viewer, entity: Entity, time = JulianDate.now()): { x: number; y: number } | undefined {
+  if (viewer.isDestroyed()) return undefined;
+  const hierarchy = entity.polygon?.hierarchy?.getValue(time) as PolygonHierarchy | undefined;
+  const positions: Cartesian3[] = hierarchy?.positions ?? entity.polyline?.positions?.getValue(time) ?? [];
+  const position = positions.length ? BoundingSphere.fromPoints(positions).center : entity.position?.getValue(time);
+  if (!position) return undefined;
+  const cartographic = Cartographic.fromCartesian(position);
+  if (!cartographic) return undefined;
+  cartographic.height = viewer.scene.globe.getHeight(cartographic) ?? 0;
+  const onCanvas = SceneTransforms.worldToWindowCoordinates(viewer.scene, Cartographic.toCartesian(cartographic));
+  const canvas = viewer.canvas.getBoundingClientRect();
+  // Off screen (or behind the camera): no anchor, the popup uses its default spot.
+  if (!onCanvas || onCanvas.x < 0 || onCanvas.y < 0 || onCanvas.x > canvas.width || onCanvas.y > canvas.height) return undefined;
+  return { x: canvas.left + onCanvas.x, y: canvas.top + onCanvas.y };
 }
 
 // Ground geometry draw order is not consistently reflected in Scene.pick.

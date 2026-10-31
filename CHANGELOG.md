@@ -2,6 +2,22 @@
 
 Mudanças do Cardeal Map template, da mais recente para a mais antiga. Projetos derivados registram suas próprias mudanças a partir do commit de origem anotado no AGENTS.md do clone.
 
+## Ivan — mudanças do projeto derivado (desde o template da307e3)
+
+### Adicionado — genérico, PORTAR AO TEMPLATE
+- `VectorPopupConfig.openOnHome` (padrão `false`): o popup da camada abre sozinho na abertura e ao fim do voo do botão Home, sobre a primeira feição visível, com os botões de ação já visíveis. Espera a feição carregar e o terreno da vista (até 5 s); um clique no mapa antes disso cancela. Se a camada estiver desligada, não abre. Um por projeto: vale a primeira camada configurada.
+  - `src/cesium/vectorPopup.ts`: `findHomePopupEntity` e `homePopupPoint` (centro da feição na altura do terreno, convertido em ponto de tela com `SceneTransforms.worldToWindowCoordinates`; só APIs públicas do Cesium 1.146).
+  - `src/components/VectorPopup.tsx`: prop `homeRequest` (contador); obstáculos do posicionamento passam a incluir régua do tempo, selo de período, dica do modelo 3D e barra inferior.
+  - `src/cesium/projectCamera.ts`: `flyToCamera(viewer, camera, duration?, onComplete?)`; `onComplete` só roda quando o voo chega à vista.
+  - `src/components/NavigationControls.tsx`: prop `onHome`, chamada ao fim do voo do Home.
+  - `src/components/mobileTabs.ts`: `initialMobileState(hasCampaigns, homePopup = false)`. Com `openOnHome` e sem campanhas, o celular abre com o mapa livre (painel fechado) para o popup aparecer; sem `openOnHome`, continua abrindo em "Camadas".
+  - `src/App.tsx`: liga tudo só quando algum GeoJSON tem `popup.openOnHome`; no Home, fecha o painel inferior do celular antes de abrir o popup.
+  - No celular o popup fica dentro do mapa (que termina acima da barra inferior) e desvia da barra: não a cobre.
+  - Ao portar: incluir testes em `check-ui.cjs` (`initialMobileState(false, true)`) e um check de `findHomePopupEntity` com entidades sintéticas; documentar em `TEMPLATE_FEATURES.md`.
+
+### Projeto
+- Área de Estudo (`area-estudo`) com `popup.openOnHome: true`.
+
 ## [3.0.0] — 2026-10-30 — Redesign visual do Jurema
 
 A interface do Jurema vira o padrão do template: todo WebGIS novo já nasce com ela. Só o que é genérico veio; textos, camadas, campanhas, URLs e assets do Jurema ficaram no Jurema. Versão maior porque o padrão mobile mudou (barra inferior no lugar da gaveta) e porque `TemporalComparison` e o `LayerPanel` mudaram de props.

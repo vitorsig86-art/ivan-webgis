@@ -16,8 +16,10 @@ export function shownMobileTabs(hasCampaigns: boolean, legendCount: number) {
 }
 
 // Start: "Tempo" with campaigns; otherwise "Camadas", i.e. the sheet open and no overlay.
-export function initialMobileState(hasCampaigns: boolean): { panelOpen: boolean; view: MobileView | null } {
-  return hasCampaigns ? { panelOpen: false, view: "time" } : { panelOpen: true, view: null };
+// With a popup.openOnHome layer and no campaigns, the map starts clear (sheet
+// closed, no overlay) so that popup is visible: the open sheet would hide it.
+export function initialMobileState(hasCampaigns: boolean, homePopup = false): { panelOpen: boolean; view: MobileView | null } {
+  return hasCampaigns ? { panelOpen: false, view: "time" } : { panelOpen: !homePopup, view: null };
 }
 
 // A tab that disappears (e.g. the last legend turned off) falls back to the start view.

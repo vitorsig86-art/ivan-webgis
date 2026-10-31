@@ -42,9 +42,12 @@ export function App() {
   // Mobile: "Camadas" opens the bottom sheet; the other tabs choose what sits
   // over the map. Default tab: "Tempo" with campaigns, otherwise "Camadas".
   const hasCampaigns = project.layers.some(isTemporalLayer);
-  const [panelOpen, setPanelOpen] = useState(() => initialMobileState(hasCampaigns).panelOpen);
+  // popup.openOnHome: open that popup at the opening view and after every Home.
+  const hasHomePopup = project.layers.some(layer => layer.source.format === "geojson" && layer.source.popup?.openOnHome);
+  const [homePopupRequest, setHomePopupRequest] = useState(() => hasHomePopup ? 1 : 0);
+  const [panelOpen, setPanelOpen] = useState(() => initialMobileState(hasCampaigns, hasHomePopup).panelOpen);
   const [sheetHigh, setSheetHigh] = useState(false);
-  const [mobileView, setMobileView] = useState<MobileView | null>(() => initialMobileState(hasCampaigns).view);
+  const [mobileView, setMobileView] = useState<MobileView | null>(() => initialMobileState(hasCampaigns, hasHomePopup).view);
   const [panelCollapsed, setPanelCollapsed] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [modelHint, setModelHint] = useState(false);
@@ -181,10 +184,11 @@ export function App() {
           showMobileView("time");
         } : undefined} onExitComparison={() => setComparison(null)} />
       <div className="map-tools">
-        <NavigationControls viewer={viewer} homeCamera={project.initialCamera} disabled={Boolean(error)} area={navigationArea} />
+        <NavigationControls viewer={viewer} homeCamera={project.initialCamera} disabled={Boolean(error)} area={navigationArea}
+          onHome={hasHomePopup ? () => { setPanelOpen(false); setHomePopupRequest(request => request + 1); } : undefined} />
         <MeasurementToolbar viewer={viewer} disabled={Boolean(error)} />
       </div>
-      <VectorPopup viewer={viewer} allowedOrigins={project.embeddedPages?.allowedOrigins} onOpenPage={openPage} />
+      <VectorPopup viewer={viewer} allowedOrigins={project.embeddedPages?.allowedOrigins} onOpenPage={openPage} homeRequest={homePopupRequest} />
       {page && <Suspense fallback={null}><EmbeddedPageOverlay url={page.url} title={page.title} onClose={() => setPage(null)} /></Suspense>}
       {ModelDevelopmentTools && (project.developmentTools?.modelAlignment || project.developmentTools?.cropAuthoring) &&
         <Suspense fallback={null}>

@@ -147,6 +147,8 @@ const areaEstudo: ProjectLayerConfig = {
         { property: "perimetro_km", label: "Perímetro", decimals: 2, suffix: " km" },
       ],
       actions: [{ label: "Entrar na simulação 3D", url: simulationUrl }],
+      // Abre sozinho na abertura e a cada Home, com o botão da simulação visível.
+      openOnHome: true,
     },
   },
 };

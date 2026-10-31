@@ -40,9 +40,10 @@ export function isManagedFlightActive(viewer: Viewer): boolean {
 }
 
 // Animated move to a configured view: Home and scenes with a camera.
-export function flyToCamera(viewer: Viewer, camera: CameraConfig, duration = 1.2): void {
+// onComplete runs only when the flight reaches the view (not when it is cancelled).
+export function flyToCamera(viewer: Viewer, camera: CameraConfig, duration = 1.2, onComplete?: () => void): void {
   if (viewer.isDestroyed()) return;
   const end = beginManagedFlight(viewer);
-  viewer.camera.flyTo({ ...createCameraView(camera), duration, complete: end, cancel: end });
+  viewer.camera.flyTo({ ...createCameraView(camera), duration, complete: () => { end(); onComplete?.(); }, cancel: end });
   viewer.scene.requestRender();
 }
